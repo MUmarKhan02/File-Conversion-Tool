@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FileForge — Convert Anything</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0d0d0d;
+      --surface:   #161616;
+      --border:    #2a2a2a;
+      --accent:    #e8ff47;
+      --accent2:   #ff6b35;
+      --text:      #f0f0f0;
+      --muted:     #666;
+      --success:   #4ade80;
+      --error:     #f87171;
+      --radius:    4px;
+      --font-head: 'Syne', sans-serif;
+      --font-mono: 'DM Mono', monospace;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-mono);
+      overflow-x: hidden;
+    }
+
+    /* ── Noise grain overlay ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.4;
+    }
+
+    /* ── Layout ── */
+    .shell {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+    }
+
+    /* ── Header ── */
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 24px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      animation: slideDown 0.5s ease both;
+    }
+
+    .logo {
+      font-family: var(--font-head);
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .logo span { color: var(--accent); }
+
+    .badge {
+      font-size: 0.65rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      padding: 4px 10px;
+      border-radius: 2px;
+    }
+
+    /* ── Main ── */
+    main {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 24px;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 640px;
+      animation: fadeUp 0.6s ease 0.1s both;
+    }
+
+    .card-title {
+      font-family: var(--font-head);
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 800;
+      line-height: 1.0;
+      letter-spacing: -0.03em;
+      margin-bottom: 8px;
+    }
+
+    .card-title em {
+      font-style: normal;
+      color: var(--accent);
+    }
+
+    .card-subtitle {
+      font-size: 0.8rem;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+      margin-bottom: 40px;
+    }
+
+    /* ── Drop Zone ── */
+    .dropzone {
+      border: 1.5px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 48px 32px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      position: relative;
+      background: var(--surface);
+      margin-bottom: 20px;
+    }
+
+    .dropzone:hover, .dropzone.drag-over {
+      border-color: var(--accent);
+      background: #1a1a0f;
+    }
+
+    .dropzone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    .drop-icon {
+      font-size: 2.5rem;
+      margin-bottom: 12px;
+      display: block;
+      transition: transform 0.2s;
+    }
+
+    .dropzone:hover .drop-icon { transform: translateY(-4px); }
+
+    .drop-label {
+      font-size: 0.85rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .drop-label strong {
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    .file-name {
+      margin-top: 14px;
+      font-size: 0.75rem;
+      color: var(--accent);
+      letter-spacing: 0.04em;
+      min-height: 18px;
+      font-weight: 500;
+    }
+
+    /* ── Controls row ── */
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    select {
+      appearance: none;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      padding: 0 16px;
+      height: 52px;
+      cursor: pointer;
+      transition: border-color 0.2s;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 36px;
+    }
+
+    select:focus { outline: none; border-color: var(--accent); }
+
+    select option { background: #1a1a1a; }
+
+    /* ── Convert button ── */
+    .btn-convert {
+      height: 52px;
+      padding: 0 28px;
+      background: var(--accent);
+      color: #0d0d0d;
+      border: none;
+      border-radius: var(--radius);
+      font-family: var(--font-head);
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      cursor: pointer;
+      transition: transform 0.15s, background 0.15s, box-shadow 0.15s;
+      white-space: nowrap;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-convert:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(232, 255, 71, 0.25);
+    }
+
+    .btn-convert:active:not(:disabled) { transform: translateY(0); }
+
+    .btn-convert:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .btn-convert.loading::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      animation: shimmer 1.2s infinite;
+    }
+
+    /* ── Status bar ── */
+    .status {
+      height: 44px;
+      border-radius: var(--radius);
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.78rem;
+      letter-spacing: 0.03em;
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity 0.3s, transform 0.3s;
+    }
+
+    .status.show { opacity: 1; transform: translateY(0); }
+
+    .status.success {
+      background: rgba(74, 222, 128, 0.08);
+      border: 1px solid rgba(74, 222, 128, 0.2);
+      color: var(--success);
+    }
+
+    .status.error {
+      background: rgba(248, 113, 113, 0.08);
+      border: 1px solid rgba(248, 113, 113, 0.2);
+      color: var(--error);
+    }
+
+    .status-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .status.success .status-dot { background: var(--success); }
+    .status.error   .status-dot { background: var(--error); }
+
+    /* ── Supported formats info ── */
+    .formats {
+      margin-top: 36px;
+      padding-top: 28px;
+      border-top: 1px solid var(--border);
+    }
+
+    .formats-label {
+      font-size: 0.65rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    .format-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .format-tag {
+      font-size: 0.72rem;
+      padding: 5px 12px;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .format-tag:hover { border-color: var(--accent); color: var(--accent); }
+
+    .format-tag .arrow { color: var(--accent2); margin: 0 4px; }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 16px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.68rem;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+    }
+
+    /* ── Animations ── */
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes shimmer {
+      from { transform: translateX(-100%); }
+      to   { transform: translateX(100%); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.4; }
+    }
+  </style>
+</head>
+<body>
+<div class="shell">
+
+  <header>
+    <div class="logo">File<span>Forge</span></div>
+    <div class="badge">.NET 10 · REST API</div>
+  </header>
+
+  <main>
+    <div class="card">
+      <h1 class="card-title">Convert.<br/><em>Download.</em><br/>Done.</h1>
+      <p class="card-subtitle">// drag a file · pick a format · get your output</p>
+
+      <!-- Drop Zone -->
+      <div class="dropzone" id="dropzone">
+        <input type="file" id="fileInput" />
+        <span class="drop-icon">⬆</span>
+        <div class="drop-label">
+          <strong>Click to browse</strong> or drag & drop your file here<br/>
+          Supports JSON, CSV, TXT
+        </div>
+        <div class="file-name" id="fileName"></div>
+      </div>
+
+      <!-- Format selector + button -->
+      <div class="controls">
+        <select id="formatSelect" disabled>
+          <option value="">— pick a file first —</option>
+        </select>
+        <button class="btn-convert" id="convertBtn" disabled>Convert →</button>
+      </div>
+
+      <!-- Status feedback -->
+      <div class="status" id="status">
+        <div class="status-dot"></div>
+        <span id="statusText"></span>
+      </div>
+
+      <!-- Supported formats -->
+      <div class="formats">
+        <div class="formats-label">Supported conversions</div>
+        <div class="format-tags" id="formatTags">
+          <div class="format-tag" style="color:var(--muted);font-style:italic">loading...</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <span>FileForge v1.0</span>
+    <span>files processed locally · nothing stored</span>
+  </footer>
+
+</div>
+
+<script>
+  // ── State ──────────────────────────────────────────────────────────────────
+  let selectedFile   = null;
+  let allConverters  = [];   // [{ input, output, label }]
+
+  const dropzone     = document.getElementById('dropzone');
+  const fileInput    = document.getElementById('fileInput');
+  const fileName     = document.getElementById('fileName');
+  const formatSelect = document.getElementById('formatSelect');
+  const convertBtn   = document.getElementById('convertBtn');
+  const status       = document.getElementById('status');
+  const statusText   = document.getElementById('statusText');
+  const formatTags   = document.getElementById('formatTags');
+
+  // ── Load available converters from API ────────────────────────────────────
+  async function loadConverters() {
+    try {
+      const res  = await fetch('/api/converters');
+      allConverters = await res.json();
+
+      // Render the "supported conversions" tags
+      formatTags.innerHTML = allConverters.map(c =>
+        `<div class="format-tag">${c.input.toUpperCase()}<span class="arrow">→</span>${c.output.toUpperCase()}</div>`
+      ).join('');
+    } catch (e) {
+      formatTags.innerHTML = '<div class="format-tag" style="color:var(--error)">API unavailable</div>';
+    }
+  }
+
+  // ── File selection ─────────────────────────────────────────────────────────
+  function handleFile(file) {
+    if (!file) return;
+    selectedFile = file;
+
+    const ext = file.name.split('.').pop().toLowerCase();
+    fileName.textContent = `📄 ${file.name}`;
+
+    // Filter converters to only those matching the uploaded file's extension
+    const matching = allConverters.filter(c => c.input === ext);
+
+    formatSelect.innerHTML = matching.length
+      ? matching.map(c => `<option value="${c.output}">${c.label}</option>`).join('')
+      : `<option value="">No converter for .${ext}</option>`;
+
+    formatSelect.disabled = matching.length === 0;
+    convertBtn.disabled   = matching.length === 0;
+
+    hideStatus();
+  }
+
+  fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
+
+  // ── Drag & drop ────────────────────────────────────────────────────────────
+  dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag-over'); });
+  dropzone.addEventListener('dragleave', ()  => dropzone.classList.remove('drag-over'));
+  dropzone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropzone.classList.remove('drag-over');
+    handleFile(e.dataTransfer.files[0]);
+  });
+
+  // ── Conversion ─────────────────────────────────────────────────────────────
+  convertBtn.addEventListener('click', async () => {
+    if (!selectedFile) return;
+
+    const outputFormat = formatSelect.value;
+    if (!outputFormat) return;
+
+    // Loading state
+    convertBtn.disabled = true;
+    convertBtn.classList.add('loading');
+    convertBtn.textContent = 'Converting...';
+    hideStatus();
+
+    try {
+      const form = new FormData();
+      form.append('file', selectedFile);
+      form.append('outputFormat', outputFormat);
+
+      const res = await fetch('/api/convert', { method: 'POST', body: form });
+
+      if (!res.ok) {
+        const err = await res.json();
+        showStatus('error', err.error || 'Conversion failed.');
+        return;
+      }
+
+      // Trigger browser download from the response blob
+      const blob        = await res.blob();
+      const disposition = res.headers.get('Content-Disposition') || '';
+      const nameMatch   = disposition.match(/filename="?([^"]+)"?/);
+      const outName     = nameMatch ? nameMatch[1] : `output.${outputFormat}`;
+
+      const url = URL.createObjectURL(blob);
+      const a   = document.createElement('a');
+      a.href     = url;
+      a.download = outName;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      showStatus('success', `✓ ${outName} ready — check your downloads.`);
+
+    } catch (e) {
+      showStatus('error', 'Network error — is the server running?');
+    } finally {
+      convertBtn.disabled = false;
+      convertBtn.classList.remove('loading');
+      convertBtn.textContent = 'Convert →';
+    }
+  });
+
+  // ── Status helpers ─────────────────────────────────────────────────────────
+  function showStatus(type, message) {
+    status.className = `status ${type} show`;
+    statusText.textContent = message;
+  }
+
+  function hideStatus() {
+    status.className = 'status';
+  }
+
+  // ── Init ───────────────────────────────────────────────────────────────────
+  loadConverters();
+</script>
+</body>
+</html>

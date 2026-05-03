@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<RootNamespace>FileConversionTool</RootNamespace>
+	</PropertyGroup>
+
+	<!--
+    Switched from Microsoft.NET.Sdk to Microsoft.NET.Sdk.Web:
+    - Pulls in ASP.NET Core MVC, Razor view engine, static files middleware
+    - No need to manually reference Microsoft.AspNetCore packages on .NET 10
+    CsvHelper + itext7 remain for the conversion logic (unchanged from console version)
+  -->
+	<ItemGroup>
+		<PackageReference Include="CsvHelper" Version="33.0.1" />
+		<PackageReference Include="DocumentFormat.OpenXml" Version="3.2.0" />
+		<PackageReference Include="itext7" Version="9.1.0" />
+		<PackageReference Include="itext7.bouncy-castle-adapter" Version="9.1.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.1" />
+		<PackageReference Include="SixLabors.ImageSharp" Version="3.1.5" />
+	</ItemGroup>
+
+</Project>

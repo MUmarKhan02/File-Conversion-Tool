@@ -1,0 +1,5 @@
+[
+  { "name": "Alice Johnson", "age": "30", "city": "Toronto", "role": "Engineer" },
+  { "name": "Bob Smith",     "age": "25", "city": "Vancouver", "role": "Designer" },
+  { "name": "Carol White",   "age": "35", "city": "Montreal", "role": "Manager" }
+]

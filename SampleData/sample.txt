@@ -1,0 +1,14 @@
+File Conversion Tool — Sample Document
+======================================
+
+This is a plain text document that will be converted to PDF.
+
+Key Features:
+- JSON to CSV conversion
+- CSV to JSON conversion
+- TXT to PDF conversion
+
+The system uses clean architecture principles and is designed
+to be easily extensible with new converters.
+
+Built with .NET 8 and iText 7.
