@@ -83,59 +83,7 @@ For convenient access, you can create a desktop shortcut:
 
 The command prompt will remain open while the app runs. Close it to stop the application.
 
-## Project Structure
 
-```
-FileConversionTool_Web/
-├── Controllers/
-│   └── HomeController.cs          # Handles web requests and responses
-├── Converters/                    # Conversion logic implementations
-│   ├── BmpToPngConverter.cs
-│   ├── CsvToJsonConverter.cs
-│   ├── JpgToPngConverter.cs
-│   ├── JsonToCsvConverter.cs
-│   ├── JsonToXmlConverter.cs
-│   ├── PngToJpgConverter.cs
-│   ├── PngToWebpConverter.cs
-│   ├── TxtToDocxConverter.cs
-│   ├── TxtToPdfConverter.cs
-│   └── XmlToJsonConverter.cs
-├── Interfaces/
-│   └── IFileConverter.cs          # Interface for all converters
-├── Models/
-│   ├── ConversionRequest.cs
-│   ├── ConversionResult.cs
-│   └── ConversionViewModel.cs     # Web-specific view model
-├── Services/
-│   ├── ConversionService.cs       # Orchestrates conversions
-│   └── ConverterFactory.cs        # Creates appropriate converters
-├── Views/
-│   ├── Home/Index.cshtml          # Main application page
-│   └── Shared/_Layout.cshtml      # Layout template
-├── wwwroot/
-│   ├── css/site.css               # Stylesheets
-│   └── js/site.js                 # Client-side JavaScript
-├── SampleData/                    # Sample files for testing
-├── appsettings.json               # Application configuration
-├── Program.cs                     # Application entry point
-└── FileConversionTool.csproj      # Project file
-```
-
-## API Endpoints
-
-- `GET /` - Main page
-- `POST /Home/Convert` - File conversion endpoint
-- `GET /Home/Download` - Download converted file
-
-## Configuration
-
-The application uses `appsettings.json` for configuration. Key settings include:
-
-- Kestrel server configuration
-- Logging levels
-- Static file serving
-
-For development, `appsettings.Development.json` overrides production settings.
 
 ## Contributing
 
@@ -144,10 +92,6 @@ For development, `appsettings.Development.json` overrides production settings.
 3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Troubleshooting
 
@@ -170,14 +114,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 Application logs are written to the console. For more detailed logging, modify `appsettings.json`.
 
-## Future Enhancements
-
-- [ ] Batch file conversion
-- [ ] Cloud storage integration
-- [ ] Additional format support
-- [ ] User authentication
-- [ ] Conversion history
-- [ ] API rate limiting
 
 ## Adding a new converter
 
