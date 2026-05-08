@@ -24,7 +24,7 @@ A powerful, user-friendly web application built with ASP.NET Core MVC for conver
 
 ## Live Demo
 
-[View Live App] (file-conversion-tool-production.up.railway.app)
+[View Live App](file-conversion-tool-production.up.railway.app)
 
 ## Prerequisites
 
